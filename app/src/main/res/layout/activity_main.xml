@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rlMain"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/llMain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/background"
+        android:orientation="vertical"
+        android:weightSum="1"
+        tools:context=".MainActivity">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.205" />
+
+        <TextView
+            android:id="@+id/tvRegistration"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            style="@style/llCode"
+            android:padding="10dp"
+            android:gravity="center"
+            android:lineSpacingExtra="1dp"
+            android:textColor="@color/orange"
+            android:text="@string/get_registration_code"
+            android:layout_weight="0.28"
+            android:layout_marginLeft="25dp"
+            android:layout_marginRight="25dp" />
+
+        <LinearLayout
+            android:id="@+id/llCode"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="top"
+            android:layout_weight="0.28"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                style="@style/llCode"
+                android:padding="0dp"
+                android:text="@string/your_code_is" />
+
+            <TextView
+                android:id="@+id/tvCode"
+                style="@style/llCode"
+                android:padding="0dp"
+                android:elevation="20dp"
+                android:textColor="@color/orange"
+                android:textSize="@dimen/guidelines_display1_34"
+                android:textIsSelectable="true"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvItWillExpireIn"
+                style="@style/llCode"
+                android:padding="0dp"
+                android:text="@string/it_will_expire_in" />
+
+            <TextView
+                android:id="@+id/onlineCodeExpiration"
+                style="@style/llCode"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="0.405"
+            android:gravity="center|bottom"
+            android:orientation="vertical">
+
+
+           <!-- <LinearLayout
+                android:id="@+id/llUserPhone"
+                style="@style/ll_et_style_straight_corners"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="50dp"
+                android:layout_marginRight="50dp"
+                android:layout_marginTop="30dp"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/etUserPhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:ellipsize="end"
+                    android:hint="@string/phone_number"
+                    android:padding="5dp"
+                    android:singleLine="true"
+                    android:textColor="@color/white_border" />
+
+
+            </LinearLayout>-->
+
+            <LinearLayout
+                android:id="@+id/llUserPass"
+                style="@style/ll_et_style_straight_corners"
+                android:layout_marginLeft="50dp"
+                android:layout_marginRight="50dp"
+                android:orientation="vertical">
+
+
+                <EditText
+                    android:id="@+id/etUserPass"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:hint="@string/pin_code"
+                    android:inputType="textPassword"
+                    android:padding="5dp"
+
+                    android:textColor="@color/white_border" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvGetCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="15dp"
+                android:background="@drawable/button_background"
+                android:clickable="true"
+                android:gravity="center"
+                android:paddingBottom="10dp"
+                android:paddingLeft="25dp"
+                android:paddingRight="25dp"
+                android:paddingTop="10dp"
+                android:text="@string/get_code"
+                android:clipToPadding="false"
+                android:elevation="20dp"
+                android:textColor="@color/text_color_get_code"
+                android:textSize="@dimen/guidelines_title20"
+                android:singleLine="false" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.13" />
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:indeterminateDrawable="@drawable/loading_icon_rotated"
+        android:visibility="invisible" />
+</RelativeLayout>

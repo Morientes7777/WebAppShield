@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">CRG Authenticator</string>
+    <string name="get_code">GET KEY</string>
+    <string name="your_code_is">Your key is:</string>
+    <string name="it_will_expire_in">It will expire in</string>
+    <string name="phone_number">Your Mobile Phone Number</string>
+    <string name="pin_code">Your PIN</string>
+
+    <string name="request_error">Request Error</string>
+    <string name="invalid_credentials">Invalid credentials!</string>
+    <string name="OK">OK</string>
+
+
+    <string name="code_error">Key Error</string>
+    <string name="error_retrieving_code">Error retrieving key!</string>
+    <string name="get_registration_code">Please enter your registration code below.\nYou can find the registration code inside the text message you received on sign up.</string>
+    <string name="validate">VALIDATE</string>
+    <string name="your_registration_code">Your registration code</string>
+
+
+</resources>
