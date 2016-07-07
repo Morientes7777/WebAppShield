@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
@@ -58,6 +59,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private CountDownTimer countDownTimer;
     private boolean timerHasStarted = false;
     private Key key;
+    private UserDevice userDevice;
+    private String pin;
 
 
     @Override
@@ -72,8 +75,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         checkDeviceId();
 
-        // session.setDeviceId(null);
-        // session.setRequirePin(false);
+     /*    session.setDeviceId(null);
+         session.setRequirePin(false);*/
 
     }
 
@@ -171,6 +174,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
         } else {
             credentials.setPassword(etUserPass.getText().toString());
+            pin = etUserPass.getText().toString();
             /**
              * 1. Check device details
              *  - if device id is valid
@@ -178,14 +182,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
              * 2. if success requestCode, else message and return to registration screen
              *
              * */
-            requestCode(Utils.baseUriWebservice + "GenerateKey", credentials.toString(), "POST");
+            getDeviceDetails(Utils.baseUriWebservice + "DeviceDetails/" + session.getDeviceId(), "", "GET");
         }
     }
 
 
     private void requestCode(String uri, String obj, String requestMethod) {
-        MyTaskCode myTaskCountry = new MyTaskCode();
-        myTaskCountry.execute(uri, obj, requestMethod);
+        MyTaskCode myTaskCode = new MyTaskCode();
+        myTaskCode.execute(uri, obj, requestMethod);
     }
 
     private void decryptWithAsyncTask(String offlineFromPrefs, String pin, String sIsOnline) {
@@ -212,8 +216,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.tvGetCode:
                 if (isValidateScreenActive) {
                     /** Register device */
-                    String key = etUserPass.getText().toString();
-                    validateCode(Utils.baseUriWebservice + "RegisterDevice/" + key, "", "GET");
+                    pin = etUserPass.getText().toString();
+                    validateCode(Utils.baseUriWebservice + "RegisterDevice/" + pin, "", "GET");
                 } else {
                     /** GET CODE */
                     getKey();
@@ -271,12 +275,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 if (key.getOnlineCode() == null || key.getOnlineCode().isEmpty()) {
                     Utils.generateDialog(getResources().getString(R.string.code_error), getResources().getString(R.string.error_retrieving_code), getResources().getString(R.string.OK), MainActivity.this);
                 } else {
-                    decryptWithAsyncTask(key.getOnlineCode(), session.getDeviceId(), "true");
+                    if (session.isRequiredPin()) {
+                        decryptWithAsyncTask(key.getOnlineCode(),pin, "true");
+                    }
+                    else{
+                        decryptWithAsyncTask(key.getOnlineCode(), session.getDeviceId(), "true");
+                    }
+
                 }
 
             } else if (result.getKey() == 401) {
                 /** invalid credentials */
                 Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
+                /** if pin field is hidden and required visible status change visibility */
+                if ((session.isRequiredPin() != userDevice.isRequirePIN()) && session.isRequiredPin()) {
+                    llUserPass.setVisibility(View.VISIBLE);
+                }
+
+                /** if pin field is displayed and required invisible status change visibility */
+                if ((session.isRequiredPin() != userDevice.isRequirePIN()) && !session.isRequiredPin()) {
+                    llUserPass.setVisibility(View.GONE);
+                }
 
             } else {
                 /**  Retry three times and then take offLineCode from shared preferences */
@@ -464,16 +483,100 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 isValidateScreenActive = false;
                 etUserPass.setText("");
-                UserDevice userDevice = new Gson().fromJson(result.getValue(), UserDevice.class);
 
+                /** Create user device from JSon */
+                userDevice = new Gson().fromJson(result.getValue(), UserDevice.class);
+
+                /** Add deviceId to credentials to be used to getCode */
                 credentials.setUsername(userDevice.getDeviceId());
 
+                /** Save deviceId and isRequiredPIN to shared preferences  */
                 session.setDeviceId(userDevice.getDeviceId());
                 session.setRequirePin(userDevice.isRequirePIN());
 
                 setValidationActiveWindow(isValidateScreenActive, session.isRequiredPin());
 
+            } else if (result.getKey() == 401) {
+                //TODO check message
+                Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
+            } else {
+                //TODO check message
+                Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.server_error), getResources().getString(R.string.OK), MainActivity.this);
+            }
 
+        }
+
+
+    }
+
+    private void getDeviceDetails(String uri, String obj, String requestMethod) {
+        MyTaskGetDeviceDetails myTaskGetDeviceDetails = new MyTaskGetDeviceDetails();
+        myTaskGetDeviceDetails.execute(uri, obj, requestMethod);
+    }
+
+    private class MyTaskGetDeviceDetails extends AsyncTask<String, String, KeyValuePair> {
+
+
+        @Override
+        protected void onPreExecute() {
+
+            Utils.startLoadingAsyncTask(progressBar, rlMain, MainActivity.this);
+            makeFieldsClickable(false);
+            super.onPreExecute();
+        }
+
+
+        @Override
+        protected KeyValuePair doInBackground(String... params) {
+
+            KeyValuePair content = null;
+
+
+            try {
+                content = Utils.requestWithKeyValueResponse(params[0], params[1], params[2]);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return content;
+        }
+
+
+        @Override
+        protected void onPostExecute(KeyValuePair result) {
+
+
+            Utils.finishLoadingAsyncTask(progressBar, rlMain, MainActivity.this);
+            makeFieldsClickable(true);
+
+            if (result.getKey() == 200) {
+
+
+                /** Reset pin edit text only if is visible */
+                if (llUserPass.getVisibility() == View.VISIBLE) {
+                    etUserPass.setText("");
+                }
+
+
+                /** Create user device from JSon */
+                userDevice = new Gson().fromJson(result.getValue(), UserDevice.class);
+
+
+                /** Add deviceId to credentials to be used to getCode */
+                credentials.setUsername(userDevice.getDeviceId());
+
+
+                /** Save deviceId and isRequiredPIN to shared preferences  */
+                session.setDeviceId(userDevice.getDeviceId());
+                session.setRequirePin(userDevice.isRequirePIN());
+
+                /** Everything ok, continue to request code */
+                Log.d("status", "200 pe device details");
+                requestCode(Utils.baseUriWebservice + "GenerateKey", credentials.toString(), "POST");
+
+            } else {
+                //TODO request message and go to register
+                Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.server_error), getResources().getString(R.string.OK), MainActivity.this);
             }
 
         }
