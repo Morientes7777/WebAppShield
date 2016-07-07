@@ -165,15 +165,19 @@ public class MainActivity extends Activity implements View.OnClickListener {
             timerHasStarted = false;
         }
 
-        /** Get values from et fields  */
-        //      phone = etUserPhone.getText().toString();
-        // pin = etUserPass.getText().toString();
 
         /** Validate fields  */
         if (session.isRequiredPin() && etUserPass.getText().toString().isEmpty()) {
             Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
         } else {
             credentials.setPassword(etUserPass.getText().toString());
+            /**
+             * 1. Check device details
+             *  - if device id is valid
+             *  - update status for isPinRequired
+             * 2. if success requestCode, else message and return to registration screen
+             *
+             * */
             requestCode(Utils.baseUriWebservice + "GenerateKey", credentials.toString(), "POST");
         }
     }
@@ -207,10 +211,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         switch (v.getId()) {
             case R.id.tvGetCode:
                 if (isValidateScreenActive) {
-                    //validateCode
+                    /** Register device */
                     String key = etUserPass.getText().toString();
                     validateCode(Utils.baseUriWebservice + "RegisterDevice/" + key, "", "GET");
                 } else {
+                    /** GET CODE */
                     getKey();
                 }
 
