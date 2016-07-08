@@ -14,6 +14,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.crgglobal.SecondFactorSecurity.Util.CustomDialog;
 import com.google.gson.Gson;
 
 import java.util.Calendar;
@@ -75,8 +76,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         checkDeviceId();
 
-     /*    session.setDeviceId(null);
-         session.setRequirePin(false);*/
+      /*  session.setDeviceId(null);
+        session.setRequirePin(false);*/
 
     }
 
@@ -276,9 +277,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     Utils.generateDialog(getResources().getString(R.string.code_error), getResources().getString(R.string.error_retrieving_code), getResources().getString(R.string.OK), MainActivity.this);
                 } else {
                     if (session.isRequiredPin()) {
-                        decryptWithAsyncTask(key.getOnlineCode(),pin, "true");
-                    }
-                    else{
+                        decryptWithAsyncTask(key.getOnlineCode(), pin, "true");
+                    } else {
                         decryptWithAsyncTask(key.getOnlineCode(), session.getDeviceId(), "true");
                     }
 
@@ -287,15 +287,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             } else if (result.getKey() == 401) {
                 /** invalid credentials */
                 Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
-                /** if pin field is hidden and required visible status change visibility */
-                if ((session.isRequiredPin() != userDevice.isRequirePIN()) && session.isRequiredPin()) {
-                    llUserPass.setVisibility(View.VISIBLE);
-                }
+                setupPinEditTextVisibility();
 
-                /** if pin field is displayed and required invisible status change visibility */
-                if ((session.isRequiredPin() != userDevice.isRequirePIN()) && !session.isRequiredPin()) {
-                    llUserPass.setVisibility(View.GONE);
-                }
 
             } else {
                 /**  Retry three times and then take offLineCode from shared preferences */
@@ -303,18 +296,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     requestCode(Utils.baseUriWebservice + "GenerateKey", credentials.toString(), "POST");
                 } else {
                     requestCount = 0;
-                    /** no offline key found in storage  */
+                    /** no offline key found in storage, error message */
                     if (session.getOfflineFromPrefs().isEmpty()) {
                         Utils.generateDialog(getResources().getString(R.string.code_error), getResources().getString(R.string.error_retrieving_code), getResources().getString(R.string.OK), MainActivity.this);
                     } else {
-                        decryptWithAsyncTask(session.getOfflineFromPrefs(), session.getDeviceId(), "false");
-                   /*     if (session.getUserFromPrefs().equals(phone)) {
+                        /** If pinRequired decript with pin, else decrypt with deviceId */
+                        if (session.isRequiredPin()) {
                             decryptWithAsyncTask(session.getOfflineFromPrefs(), pin, "false");
                         } else {
-                            *//** invalid phone *//*
-                            Utils.generateDialog(getResources().getString(R.string.code_error), getResources().getString(R.string.error_retrieving_code), getResources().getString(R.string.OK), MainActivity.this);
+                            decryptWithAsyncTask(session.getOfflineFromPrefs(), session.getDeviceId(), "false");
                         }
-*/
+
                     }
 
 
@@ -325,6 +317,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
 
 
+    }
+
+    private void setupPinEditTextVisibility() {
+        /** if pin field is hidden and required visible status change visibility */
+        if ((session.isRequiredPin() != userDevice.isRequirePIN()) && session.isRequiredPin()) {
+            llUserPass.setVisibility(View.VISIBLE);
+        }
+
+        /** if pin field is displayed and required invisible status change visibility */
+        if ((session.isRequiredPin() != userDevice.isRequirePIN()) && !session.isRequiredPin()) {
+            llUserPass.setVisibility(View.GONE);
+        }
     }
 
     private class MyTaskDecrypt extends AsyncTask<String, String, String> {
@@ -486,6 +490,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 /** Create user device from JSon */
                 userDevice = new Gson().fromJson(result.getValue(), UserDevice.class);
+                Log.d("userDeviceValid", userDevice.getDeviceId());
 
                 /** Add deviceId to credentials to be used to getCode */
                 credentials.setUsername(userDevice.getDeviceId());
@@ -560,7 +565,16 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 /** Create user device from JSon */
                 userDevice = new Gson().fromJson(result.getValue(), UserDevice.class);
+             /*   String rez = "{\n" +
+                        "DeviceId: \"69z7bmevapza273tx2v9\",\n" +
+                        "RegistrationExpired: false,\n" +
+                        "RequirePIN: false\n" +
+                        "}";
+                         userDevice = new Gson().fromJson(rez, UserDevice.class);
+                         */
 
+
+                Log.d("userDevice", userDevice.getDeviceId());
 
                 /** Add deviceId to credentials to be used to getCode */
                 credentials.setUsername(userDevice.getDeviceId());
@@ -570,13 +584,38 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 session.setDeviceId(userDevice.getDeviceId());
                 session.setRequirePin(userDevice.isRequirePIN());
 
+                setupPinEditTextVisibility();
+
                 /** Everything ok, continue to request code */
                 Log.d("status", "200 pe device details");
-                requestCode(Utils.baseUriWebservice + "GenerateKey", credentials.toString(), "POST");
+
+
+                if (userDevice.isRegistrationExpired()) {
+                    CustomDialog.myOnClickListener myListener = new CustomDialog.myOnClickListener() {
+                        @Override
+                        public void onButtonClick() {
+                            //Click on possitive button
+
+                            isValidateScreenActive = true;
+                            setValidationActiveWindow(true, false);
+                            session.setDeviceId(null);
+
+
+                        }
+                    };
+
+                    //TODO session expired message
+                    CustomDialog dialog = new CustomDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), "", "OK", MainActivity.this, myListener);
+                    dialog.show();
+                } else {
+                    requestCode(Utils.baseUriWebservice + "GenerateKey", credentials.toString(), "POST");
+                }
+
 
             } else {
                 //TODO request message and go to register
-                Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.server_error), getResources().getString(R.string.OK), MainActivity.this);
+                requestCode(Utils.baseUriWebservice + "GenerateKey", credentials.toString(), "POST");
+                //    Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.server_error), getResources().getString(R.string.OK), MainActivity.this);
             }
 
         }

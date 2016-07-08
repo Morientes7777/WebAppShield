@@ -22,6 +22,10 @@ public class UserDevice {
     @SerializedName("PIN")
     private String PIN;
 
+    @SerializedName("RegistrationExpired")
+    private boolean RegistrationExpired;
+
+
 
     public int getUserDataId() {
         return userDataId;
@@ -61,5 +65,13 @@ public class UserDevice {
 
     public void setPIN(String PIN) {
         this.PIN = PIN;
+    }
+
+    public boolean isRegistrationExpired() {
+        return RegistrationExpired;
+    }
+
+    public void setRegistrationExpired(boolean registrationExpired) {
+        RegistrationExpired = registrationExpired;
     }
 }
