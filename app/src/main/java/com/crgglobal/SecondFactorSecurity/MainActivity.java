@@ -440,8 +440,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
 
     private void validateCode(String uri, String obj, String requestMethod) {
-        MyTaskValidateCode myTaskValidateCountry = new MyTaskValidateCode();
-        myTaskValidateCountry.execute(uri, obj, requestMethod);
+        MyTaskValidateCode myTaskValidateCode = new MyTaskValidateCode();
+        myTaskValidateCode.execute(uri, obj, requestMethod);
     }
 
     private class MyTaskValidateCode extends AsyncTask<String, String, KeyValuePair> {
