@@ -6,9 +6,30 @@
     <string name="phone_number">Your Mobile Phone Number</string>
     <string name="pin_code">Your PIN</string>
 
-    <string name="request_error">Request Error</string>
+
     <string name="server_error">Server Error</string>
+    <string name="request_error">Cannot connect to the server at the moment. Please try again later.</string>
+
+    <string name="sign_in_error">Sign in error</string>
     <string name="invalid_credentials">Invalid credentials!</string>
+
+
+    <string name="device_error">Device Error</string>
+    <string name="device_expired">Your device expired. You must register your device again.</string>
+    <string name="device_not_found">Your device was not found. You have to register your device.</string>
+
+    <string name="note">Note</string>
+    <string name="pin_enabled">From now on you must provide a PIN to get a Key. Please setup your PIN on the website.</string>
+
+    <string name="registration_error">Registration error</string>
+    <string name="invalid_key">Invalid key!</string>
+
+    <string name="no_internet_title">Network connection error</string>
+    <string name="no_internet_text">You must be connected to the internet to register your device</string>
+
+
+
+
     <string name="OK">OK</string>
 
 

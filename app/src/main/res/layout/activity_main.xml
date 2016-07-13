@@ -31,7 +31,7 @@
             android:padding="10dp"
             android:gravity="center"
             android:lineSpacingExtra="1dp"
-            android:textColor="@color/orange"
+            android:textColor="@color/white_border"
             android:text="@string/get_registration_code"
             android:layout_weight="0.28"
             android:layout_marginLeft="25dp"

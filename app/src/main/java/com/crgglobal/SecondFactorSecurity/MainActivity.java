@@ -36,6 +36,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     int requestCount = 0;
     boolean isValidateScreenActive;
 
+    CustomDialog.myOnClickListener myListener;
+
     Credentials credentials;
     /**
      * There are two screens displayed depending on isValidateScreenActive value
@@ -172,7 +174,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         /** Validate fields  */
         if (session.isRequiredPin() && etUserPass.getText().toString().isEmpty()) {
-            Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
+            Utils.generateDialog(getResources().getString(R.string.sign_in_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
         } else {
             credentials.setPassword(etUserPass.getText().toString());
             pin = etUserPass.getText().toString();
@@ -219,6 +221,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     /** Register device */
                     pin = etUserPass.getText().toString();
                     validateCode(Utils.baseUriWebservice + "RegisterDevice/" + pin, "", "GET");
+                    Log.d("validateURL", Utils.baseUriWebservice + "RegisterDevice/" + pin);
                 } else {
                     /** GET CODE */
                     getKey();
@@ -286,7 +289,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
             } else if (result.getKey() == 401) {
                 /** invalid credentials */
-                Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
+                Utils.generateDialog(getResources().getString(R.string.sign_in_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
                 setupPinEditTextVisibility();
 
 
@@ -320,13 +323,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private void setupPinEditTextVisibility() {
-        /** if pin field is hidden and required visible status change visibility */
-        if ((session.isRequiredPin() != userDevice.isRequirePIN()) && session.isRequiredPin()) {
-            llUserPass.setVisibility(View.VISIBLE);
-        }
 
         /** if pin field is displayed and required invisible status change visibility */
-        if ((session.isRequiredPin() != userDevice.isRequirePIN()) && !session.isRequiredPin()) {
+        if (!session.isRequiredPin()&& llUserPass.getVisibility() == View.VISIBLE ) {
             llUserPass.setVisibility(View.GONE);
         }
     }
@@ -380,7 +379,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 }
 
             } else {
-                Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
+                Utils.generateDialog(getResources().getString(R.string.sign_in_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
             }
 
         }
@@ -483,6 +482,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Utils.finishLoadingAsyncTask(progressBar, rlMain, MainActivity.this);
             makeFieldsClickable(true);
 
+            Log.d("validateCode", result.getKey() + " " + result.getValue());
+
             if (result.getKey() == 200) {
 
                 isValidateScreenActive = false;
@@ -502,11 +503,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 setValidationActiveWindow(isValidateScreenActive, session.isRequiredPin());
 
             } else if (result.getKey() == 401) {
-                //TODO check message
-                Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), getResources().getString(R.string.OK), MainActivity.this);
+                etUserPass.setText("");
+                Utils.generateDialog(getResources().getString(R.string.registration_error), getResources().getString(R.string.invalid_key), getResources().getString(R.string.OK), MainActivity.this);
             } else {
-                //TODO check message
-                Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.server_error), getResources().getString(R.string.OK), MainActivity.this);
+                etUserPass.setText("");
+                if (result.getKey() == 0) {
+                    Utils.generateDialog(getResources().getString(R.string.no_internet_title), getResources().getString(R.string.no_internet_text), getResources().getString(R.string.OK), MainActivity.this);
+                }
+                else{
+                    Utils.generateDialog(getResources().getString(R.string.server_error), getResources().getString(R.string.request_error), getResources().getString(R.string.OK), MainActivity.this);
+                }
+
             }
 
         }
@@ -554,13 +561,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Utils.finishLoadingAsyncTask(progressBar, rlMain, MainActivity.this);
             makeFieldsClickable(true);
 
+            /** Reset pin edit text only if is visible */
+            if (llUserPass.getVisibility() == View.VISIBLE) {
+                etUserPass.setText("");
+            }
+
             if (result.getKey() == 200) {
-
-
-                /** Reset pin edit text only if is visible */
-                if (llUserPass.getVisibility() == View.VISIBLE) {
-                    etUserPass.setText("");
-                }
 
 
                 /** Create user device from JSon */
@@ -574,7 +580,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                          */
 
 
-                Log.d("userDevice", userDevice.getDeviceId());
+                Log.d("userDevice", userDevice.toString());
 
                 /** Add deviceId to credentials to be used to getCode */
                 credentials.setUsername(userDevice.getDeviceId());
@@ -591,29 +597,26 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
 
                 if (userDevice.isRegistrationExpired()) {
-                    CustomDialog.myOnClickListener myListener = new CustomDialog.myOnClickListener() {
-                        @Override
-                        public void onButtonClick() {
-                            //Click on possitive button
-
-                            isValidateScreenActive = true;
-                            setValidationActiveWindow(true, false);
-                            session.setDeviceId(null);
-
-
-                        }
-                    };
-
-                    //TODO session expired message
-                    CustomDialog dialog = new CustomDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.invalid_credentials), "", "OK", MainActivity.this, myListener);
+                    createMListener();
+                    CustomDialog dialog = new CustomDialog(getResources().getString(R.string.device_error), getResources().getString(R.string.device_expired), "", "OK", MainActivity.this, myListener);
                     dialog.show();
-                } else {
+                } else if (session.isRequiredPin() && llUserPass.getVisibility() != View.VISIBLE) {
+                    /** if pin field is hidden and required visibility status change visibility */
+                        llUserPass.setVisibility(View.VISIBLE);
+                        Utils.generateDialog(getResources().getString(R.string.note), getResources().getString(R.string.pin_enabled), getResources().getString(R.string.OK), MainActivity.this);
+                    }
+                else {
                     requestCode(Utils.baseUriWebservice + "GenerateKey", credentials.toString(), "POST");
                 }
 
 
-            } else {
-                //TODO request message and go to register
+            }
+            else  if (result.getKey() == 401) {
+                createMListener();
+                CustomDialog dialog = new CustomDialog(getResources().getString(R.string.device_error), getResources().getString(R.string.device_not_found), "", "OK", MainActivity.this, myListener);
+                dialog.show();
+            }
+            else {
                 requestCode(Utils.baseUriWebservice + "GenerateKey", credentials.toString(), "POST");
                 //    Utils.generateDialog(getResources().getString(R.string.request_error), getResources().getString(R.string.server_error), getResources().getString(R.string.OK), MainActivity.this);
             }
@@ -621,6 +624,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
 
 
+    }
+
+    private void createMListener() {
+        myListener = new CustomDialog.myOnClickListener() {
+            @Override
+            public void onButtonClick() {
+                //Click on possitive button
+                isValidateScreenActive = true;
+                setValidationActiveWindow(true, false);
+                session.setDeviceId(null);
+                llUserPass.setVisibility(View.VISIBLE);
+
+
+            }
+        };
     }
 
 }

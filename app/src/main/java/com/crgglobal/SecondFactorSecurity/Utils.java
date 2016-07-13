@@ -49,8 +49,8 @@ import t0mm13b.AndroJNCryptor.JNCryptorSettings;
  */
 public class Utils {
 
-   public static final String baseUriWebservice = "http://192.168.0.25/ksws/KeyService.svc/";
-  //public static final String baseUriWebservice = "https://crgauthenticator.com/WS/KeyService.svc/";
+    public static final String baseUriWebservice = "http://192.168.0.25/ksws/KeyService.svc/";
+    //public static final String baseUriWebservice = "https://crgauthenticator.com/WS/KeyService.svc/";
 
     //region  WEBSERVICE REQUESTS
 /*
@@ -147,7 +147,7 @@ public class Utils {
 */
 
 
-    public static KeyValuePair requestWithKeyValueResponse(String uri,  String obj, String requestMethod) throws Exception {
+    public static KeyValuePair requestWithKeyValueResponse(String uri, String obj, String requestMethod) throws Exception {
 
         BufferedReader reader = null;
         KeyValuePair keyValueIntStringResponse = new KeyValuePair();
@@ -161,7 +161,7 @@ public class Utils {
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
 
-          //  con.setRequestProperty("Authorization", userNamePasswordBase64(user, password));
+
 
             con.setRequestMethod(requestMethod);
             con.setRequestProperty("Content-Type", "application/json");
@@ -176,16 +176,26 @@ public class Utils {
             } else {
                 con.setDoOutput(false);
             }
-            con.setConnectTimeout(10000);
-            con.setReadTimeout(5000);
+           // con.setConnectTimeout(10000);
+           // con.setReadTimeout(5000);
 
             int responseCode = 0;
 
+
             try {
                 responseCode = con.getResponseCode();
-            } catch (Exception e) {
+            }catch (IOException e){
+                Log.e("errorIO", e.getMessage());
+                if (e.getMessage().equals("No authentication challenges found")) {
+                    responseCode = 401;
+                }
+
+            }
+            catch (Exception e) {
                 Log.e("error", e.getMessage());
             }
+
+            Log.d("responseCode2", String.valueOf(responseCode));
 
             if (responseCode == 200) {
                 InputStream in = con.getInputStream();
@@ -233,7 +243,7 @@ public class Utils {
 
             }
         }
-        keyValueIntStringResponse.setKey(500);
+      //  keyValueIntStringResponse.setKey(500);
         keyValueIntStringResponse.setValue("Unknown error");
         return keyValueIntStringResponse;
     }
@@ -348,15 +358,17 @@ public class Utils {
         alpha.setDuration(0); // Make animation instant
         alpha.setFillAfter(true); // Tell it to persist after the animation ends
         rlMain.startAnimation(alpha);
-     //   myActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+        //   myActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
     }
     //endregion
 //endregion
 
     //region  DATE HANDLING
 
-    /** Transform ISO 8601 string to Calendar.
-     * 2016-04-25T13:20:25.2749092+03:00*/
+    /**
+     * Transform ISO 8601 string to Calendar.
+     * 2016-04-25T13:20:25.2749092+03:00
+     */
     public static Calendar toCalendar(final String iso8601string)
             throws ParseException {
         Calendar calendar = GregorianCalendar.getInstance();
@@ -371,7 +383,7 @@ public class Utils {
         return calendar;
     }
 
-    public  static Calendar getCalendar(String isodate) {
+    public static Calendar getCalendar(String isodate) {
         // YYYY-MM-DDThh:mm:ss.sTZD
         StringTokenizer st = new StringTokenizer(isodate, "-T:.+Z", true);
 
@@ -496,7 +508,6 @@ public class Utils {
     private static boolean check(StringTokenizer st, String token)
 
 
-
     {
         try {
             if (st.nextToken().equals(token)) {
@@ -511,9 +522,10 @@ public class Utils {
 //endregion
 
     //region  ENCRYPT - DECRYPT
+
     /**
      * source from encryption jar: https://github.com/t0mm13b/AndroJNCryptor
-     *      */
+     */
     public static String Decrypt(String jncryptdData, String encryptionKey) {
         JNCryptor crypt = JNCryptorFactory.getCryptor();
         JNCryptorSettings jnCryptSettings = new JNCryptorSettings(10000);
@@ -544,7 +556,6 @@ public class Utils {
                     "1234".toCharArray(),
                     jnCryptSettings);
         } catch (CryptorException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         if (cipher != null) {

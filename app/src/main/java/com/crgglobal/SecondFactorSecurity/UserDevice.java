@@ -74,4 +74,16 @@ public class UserDevice {
     public void setRegistrationExpired(boolean registrationExpired) {
         RegistrationExpired = registrationExpired;
     }
+
+    @Override
+    public String toString() {
+        return "UserDevice{" +
+                "userDataId=" + userDataId +
+                ", userDeviceId=" + userDeviceId +
+                ", deviceId='" + deviceId + '\'' +
+                ", requirePIN=" + requirePIN +
+                ", PIN='" + PIN + '\'' +
+                ", RegistrationExpired=" + RegistrationExpired +
+                '}';
+    }
 }
